@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="space-y-12">
+        {% for post in page_obj %}
+            <article class="bg-white p-8 rounded-lg shadow-sm hover:shadow-md transition duration-300">
+                <header class="mb-4">
+                    <h2 class="text-3xl font-bold text-gray-800 hover:text-indigo-600 transition">
+                        <a href="{% url 'post_detail' slug=post.slug %}">{{ post.title }}</a>
+                    </h2>
+                    <div class="text-sm text-gray-500 mt-2 flex items-center space-x-4">
+                        <span>{{ post.created_at|date:"F d, Y" }}</span>
+                        <span>&bull;</span>
+                        <span>{{ post.author.username }}</span>
+                    </div>
+                </header>
+                
+                <div class="prose max-w-none text-gray-600 mb-6">
+                    {{ post.content|striptags|truncatewords:30 }}
+                </div>
+
+                <a href="{% url 'post_detail' slug=post.slug %}" class="inline-flex items-center text-indigo-600 font-semibold hover:text-indigo-800 transition">
+                    Read more
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </a>
+            </article>
+        {% empty %}
+            <div class="text-center py-12">
+                <p class="text-xl text-gray-500">No posts published yet.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="mt-12 flex justify-center space-x-2">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">Previous</a>
+            {% endif %}
+
+            <span class="px-4 py-2 text-gray-700">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">Next</a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %} 

@@ -8,6 +8,7 @@
 ---
 
 ## 1. Overview
+
 This document outlines the specific logic, algorithms, and configuration strategies required to deliver the **Phase 1 MVP**. It strictly adheres to the "No Node.js" constraint by utilizing the **Tailwind CSS Play CDN** for frontend styling and standard Python packages for backend logic.
 
 ---
@@ -15,71 +16,76 @@ This document outlines the specific logic, algorithms, and configuration strateg
 ## 2. Infrastructure & Configuration Logic
 
 ### 2.1 Tailwind CSS Integration (CDN Approach)
+
 To satisfy the requirement of using "online Tailwind" without local build steps , we will inject the Tailwind library directly into the browser via the Main Template.
 
-*   **Logic:**
-    1.  Create a base template: `templates/base.html`.
-    2.  In the HTML `<head>`, insert the standard Tailwind CDN script.
-    3.  **Constraint:** This requires an active internet connection for the site to render styles (acceptable for MVP).
+- **Logic:**
+  1.  Create a base template: `templates/base.html`.
+  2.  In the HTML `<head>`, insert the standard Tailwind CDN script.
+  3.  **Constraint:** This requires an active internet connection for the site to render styles (acceptable for MVP).
 
 **Snippet (`base.html`):**
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Lyra's Blog{% endblock %}</title>
     <!-- Tailwind CSS (Online CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Typography Plugin (For Rich Text rendering) -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-</head>
-<body class="bg-gray-50 text-gray-900">
-    {% block content %}
-    {% endblock %}
-</body>
+  </head>
+  <body class="bg-gray-50 text-gray-900">
+    {% block content %} {% endblock %}
+  </body>
 </html>
 ```
 
 ### 2.2 Rich Text Editor Configuration
+
 we will use `django-ckeditor` (a pure Python package).
 
-*   **Logic:**
-    1.  Install `django-ckeditor`.
-    2.  Add `ckeditor` to `INSTALLED_APPS`.
-    3.  Configure `CKEDITOR_CONFIGS` in `settings.py` to allow basic formatting (Bold, Italic, Links, Headers, Code Blocks) but strip dangerous tags (Script).
+- **Logic:**
+  1.  Install `django-ckeditor`.
+  2.  Add `ckeditor` to `INSTALLED_APPS`.
+  3.  Configure `CKEDITOR_CONFIGS` in `settings.py` to allow basic formatting (Bold, Italic, Links, Headers, Code Blocks) but strip dangerous tags (Script).
 
 ---
 
 ## 3. Data Model Algorithms
 
 ### 3.1 Custom User (Initialization)
-*   **Logic:** Must be defined *before* the first `python manage.py migrate`.
-*   **Algorithm:**
-    1.  Inherit from `AbstractUser`.
-    2.  Add `is_subscribed` (Boolean, default=False).
-    3.  Point `AUTH_USER_MODEL` in settings to this new model.
+
+- **Logic:** Must be defined _before_ the first `python manage.py migrate`.
+- **Algorithm:**
+  1.  Inherit from `AbstractUser`.
+  2.  Add `is_subscribed` (Boolean, default=False).
+  3.  Point `AUTH_USER_MODEL` in settings to this new model.
 
 ### 3.2 Post Model & Auto-Slug Generation
+
 We need to ensure every post has a URL-friendly slug.
 
-*   **Algorithm (Slug Generation):**
-    We override the model's `save()` method.
-    1.  **Input:** Post Title (e.g., "Hello World!").
-    2.  **Check:** Is the `slug` field empty?
-    3.  **Process:**
-        *   Convert Title to lowercase string.
-        *   Replace spaces with hyphens.
-        *   Remove special characters.
-        *   (Utilize Django's `django.utils.text.slugify`).
-    4.  **Uniqueness Check:**
-        *   Query database: Does this slug exist?
-        *   *If Yes:* Append a random 4-character string or timestamp to the slug.
-        *   *If No:* Proceed.
-    5.  **Output:** Save record to DB.
+- **Algorithm (Slug Generation):**
+  We override the model's `save()` method.
+  1.  **Input:** Post Title (e.g., "Hello World!").
+  2.  **Check:** Is the `slug` field empty?
+  3.  **Process:**
+      - Convert Title to lowercase string.
+      - Replace spaces with hyphens.
+      - Remove special characters.
+      - (Utilize Django's `django.utils.text.slugify`).
+  4.  **Uniqueness Check:**
+      - Query database: Does this slug exist?
+      - _If Yes:_ Append a random 4-character string or timestamp to the slug.
+      - _If No:_ Proceed.
+  5.  **Output:** Save record to DB.
 
 **Pseudo-Code:**
+
 ```python
 from django.utils.text import slugify
 
@@ -94,52 +100,55 @@ def save(self, *args, **kwargs):
 ## 4. View Layer Logic (Business Logic)
 
 ### 4.1 Homepage (Post List)
-*   **Objective:** Display published posts, ordered by newest first.
-*   **Logic:**
-    1.  **Query:** Select all `Post` objects.
-    2.  **Filter:** Apply `status=1` (Published). *Drafts (0) must be excluded.*
-    3.  **Sort:** Order by `-created_at` (Descending).
-    4.  **Pagination:**
-        *   Limit results to 5 or 10 posts per page.
-        *   Check `request.GET` for the page number parameter.
-    5.  **Context:** Pass the list of objects to `blog/home.html`.
+
+- **Objective:** Display published posts, ordered by newest first.
+- **Logic:**
+  1.  **Query:** Select all `Post` objects.
+  2.  **Filter:** Apply `status=1` (Published). _Drafts (0) must be excluded._
+  3.  **Sort:** Order by `-created_at` (Descending).
+  4.  **Pagination:**
+      - Limit results to 5 or 10 posts per page.
+      - Check `request.GET` for the page number parameter.
+  5.  **Context:** Pass the list of objects to `blog/home.html`.
 
 ### 4.2 Post Detail (Article Reading)
-*   **Objective:** specific post based on the URL slug.
-*   **Logic:**
-    1.  **Input:** `slug` string from URL.
-    2.  **Query:** `Post.objects.get(slug=input_slug)`.
-    3.  **Security Filter:** Ensure `status=1`. (Public users cannot view Drafts via URL guessing).
-    4.  **Exception Handling:**
-        *   *If Found:* Render `blog/post_detail.html`.
-        *   *If Not Found:* Raise `Http404`.
+
+- **Objective:** specific post based on the URL slug.
+- **Logic:**
+  1.  **Input:** `slug` string from URL.
+  2.  **Query:** `Post.objects.get(slug=input_slug)`.
+  3.  **Security Filter:** Ensure `status=1`. (Public users cannot view Drafts via URL guessing).
+  4.  **Exception Handling:**
+      - _If Found:_ Render `blog/post_detail.html`.
+      - _If Not Found:_ Raise `Http404`.
 
 ---
 
 ## 5. Template Rendering Algorithms
 
 ### 5.1 Post List Loop
-*   **Input:** List of Post objects.
-*   **Algorithm:**
-    1.  Iterate `for post in page_obj`:
-    2.  Display `post.title`, `post.created_at`, `post.author`.
-    3.  **Excerpt Generation:**
-        *   Since `post.content` is HTML (from CKEditor), we cannot just slice it.
-        *   Use Django filter `{{ post.content|striptags|truncatewords:30 }}` to create a clean preview text without breaking HTML tags.
+
+- **Input:** List of Post objects.
+- **Algorithm:**
+  1.  Iterate `for post in page_obj`:
+  2.  Display `post.title`, `post.created_at`, `post.author`.
+  3.  **Excerpt Generation:**
+      - Since `post.content` is HTML (from CKEditor), we cannot just slice it.
+      - Use Django filter `{{ post.content|striptags|truncatewords:30 }}` to create a clean preview text without breaking HTML tags.
 
 ### 5.2 Rich Text Rendering
-*   **Input:** `post.content` (HTML String).
-*   **Logic:**
-    1.  Use the `|safe` filter to prevent Django from escaping the HTML.
-    2.  **Styling:** Apply the Tailwind Typography plugin class (`prose`) to the container div. This automatically styles the raw HTML (h1, p, ul, blockquote) generated by the editor, saving us from writing custom CSS for every element.
+
+- **Input:** `post.content` (HTML String).
+- **Logic:**
+  1.  Use the `|safe` filter to prevent Django from escaping the HTML.
+  2.  **Styling:** Apply the Tailwind Typography plugin class (`prose`) to the container div. This automatically styles the raw HTML (h1, p, ul, blockquote) generated by the editor, saving us from writing custom CSS for every element.
 
 **Snippet (`post_detail.html`):**
+
 ```html
 <article class="prose prose-lg mx-auto">
-    <h1>{{ post.title }}</h1>
-    <div class="content">
-        {{ post.content|safe }}
-    </div>
+  <h1>{{ post.title }}</h1>
+  <div class="content">{{ post.content|safe }}</div>
 </article>
 ```
 
@@ -148,20 +157,22 @@ def save(self, *args, **kwargs):
 ## 6. Security Implementation (MVP)
 
 ### 6.1 Admin Security
-*   **Logic:** Ensure only the `is_staff=True` user (The Author) can access `/admin/`. This is handled automatically by Django's Admin site, but we must ensure the `CustomUser` creation process correctly sets the superuser flags.
+
+- **Logic:** Ensure only the `is_staff=True` user (The Author) can access `/admin/`. This is handled automatically by Django's Admin site, but we must ensure the `CustomUser` creation process correctly sets the superuser flags.
 
 ### 6.2 XSS Protection (Post Body)
-*   **Risk:** The Author uses a Rich Text Editor.
-*   **Mitigation:**
-    *   Trust Model: Since the Author is the *only* one writing posts (MVP), we use `|safe`.
-    *   (Future Phase note: If we allow public submissions later, we must implement `django-bleach` to sanitize the input).
+
+- **Risk:** The Author uses a Rich Text Editor.
+- **Mitigation:**
+  - Trust Model: Since the Author is the _only_ one writing posts (MVP), we use `|safe`.
+  - (Future Phase note: If we allow public submissions later, we must implement `django-bleach` to sanitize the input).
 
 ---
 
 ## 7. URL Routing Table (MVP)
 
-| URL Pattern | View Logic | Name |
-| :--- | :--- | :--- |
-| `/` | `PostListView` | `home` |
-| `/post/<slug:slug>/` | `PostDetailView` | `post_detail` |
-| `/admin/` | `admin.site.urls` | `admin` |
+| URL Pattern          | View Logic        | Name          |
+| :------------------- | :---------------- | :------------ |
+| `/`                  | `PostListView`    | `home`        |
+| `/post/<slug:slug>/` | `PostDetailView`  | `post_detail` |
+| `/admin/`            | `admin.site.urls` | `admin`       |

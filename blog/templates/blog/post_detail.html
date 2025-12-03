@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post_detail.title }} | Lyra's Blog{% endblock %}
+
+{% block content %}
+    <article class="bg-white p-8 rounded-lg shadow-sm">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ post_detail.title }}</h1>
+            <div class="text-gray-500 flex justify-center items-center space-x-4">
+                <span>By {{ post_detail.author.username }}</span>
+                <span>&bull;</span>
+                <span>{{ post_detail.created_at|date:"F d, Y" }}</span>
+            </div>
+        </header>
+        
+        <div class="prose prose-lg prose-indigo mx-auto">
+            {{ post_detail.content|safe }}
+        </div>
+
+        <div class="mt-12 pt-8 border-t border-gray-100 text-center">
+            <a href="{% url 'home' %}" class="text-indigo-600 hover:text-indigo-800 font-medium transition">
+                &larr; Back to Home
+            </a>
+        </div>
+    </article>
+{% endblock %}

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Lyra's Blog{% endblock %}</title>
+    <!-- Tailwind CSS (Online CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Typography Plugin (For Rich Text rendering) -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+  </head>
+  <body class="bg-gray-50 text-gray-900 font-sans antialiased">
+    <nav class="bg-white shadow mb-8">
+      <div
+        class="max-w-4xl mx-auto px-4 py-6 flex justify-between items-center"
+      >
+        <a
+          href="{% url 'home' %}"
+          class="text-2xl font-bold text-indigo-600 hover:text-indigo-800 transition"
+          >Lyra's Blog</a
+        >
+        <div>
+          {% if user.is_authenticated %}
+          <span class="text-gray-600 mr-4">Hello, {{ user.username }}</span>
+          <!-- Placeholder for logout -->
+          {% else %}
+          <!-- Placeholder for login -->
+          {% endif %}
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 pb-12">
+      {% block content %} {% endblock %}
+    </main>
+
+    <footer
+      class="bg-white border-t mt-12 py-8 text-center text-gray-500 text-sm"
+    >
+      &copy; {% now "Y" %} Lyra's Blog. All rights reserved.
+    </footer>
+  </body>
+</html>
