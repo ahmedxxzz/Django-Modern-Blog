@@ -1,6 +1,28 @@
 {% extends 'base.html' %}
 
 {% block content %}
+    {% if messages %}
+        <div class="mb-8 space-y-4">
+            {% for message in messages %}
+                <div class="p-4 rounded-md {% if message.tags == 'error' %}bg-red-50 text-red-700{% elif message.tags == 'success' %}bg-green-50 text-green-700{% else %}bg-blue-50 text-blue-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if not user.is_authenticated %}
+        <div class="bg-indigo-50 border-l-4 border-indigo-500 p-6 mb-12 rounded-r-md">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-bold text-indigo-800">Join our community!</h3>
+                    <p class="text-indigo-700 mt-1">Create an account to verify your identity and access exclusive features.</p>
+                </div>
+                <a href="{% url 'register' %}" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition shadow-sm whitespace-nowrap ml-4">Get Started</a>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="space-y-12">
         {% for post in page_obj %}
             <article class="bg-white p-8 rounded-lg shadow-sm hover:shadow-md transition duration-300">
