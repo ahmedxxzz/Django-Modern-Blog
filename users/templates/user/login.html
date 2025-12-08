@@ -1,13 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Sign Up | Lyra's Blog{% endblock %}
+{% block title %}Login | Lyra's Blog{% endblock %}
 
 {% block content %}
 <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-sm">
-    <!-- Custom styles to fix invisible inputs due to Tailwind Preflight -->
     <style>
         form input[type="text"],
-        form input[type="email"],
         form input[type="password"] {
             width: 100%;
             padding: 0.75rem;
@@ -16,27 +14,12 @@
             margin-top: 0.25rem;
         }
         form input[type="text"]:focus,
-        form input[type="email"]:focus,
         form input[type="password"]:focus {
             outline: 2px solid #4f46e5; /* indigo-600 */
             border-color: #4f46e5;
         }
-        /* Style for the checkbox (is_subscribed) */
-        form input[type="checkbox"] {
-            height: 1.25rem;
-            width: 1.25rem;
-            border-radius: 0.25rem;
-            border: 1px solid #d1d5db;
-            color: #4f46e5;
-            margin-right: 0.5rem;
-        }
-        /* Align checkbox container */
-        form p:has(input[type="checkbox"]) {
-             display: flex;
-             align-items: center;
-        }
     </style>
-    <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Create an Account</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Welcome Back</h1>
     
     <form method="post" class="space-y-6">
         {% csrf_token %}
@@ -52,15 +35,9 @@
                 <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
                     {{ field.label }}
                 </label>
-                <!-- Quick hack to render input with Tailwind classes. 
-                     Ideally, use django-widget-tweaks or custom widgets, 
-                     but for MVP standard rendering with a wrapper div helps. -->
                 <div class="mt-1">
                     {{ field }}
                 </div>
-                {% if field.help_text %}
-                    <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
-                {% endif %}
                 {% if field.errors %}
                     <div class="text-red-600 text-xs mt-1">
                         {{ field.errors }}
@@ -70,12 +47,12 @@
         {% endfor %}
 
         <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition font-medium">
-            Sign Up
+            Login
         </button>
     </form>
 
     <div class="mt-6 text-center text-sm text-gray-600">
-        Already have an account? <a href="{% url 'login'%}" class="text-indigo-600 hover:text-indigo-800 font-medium">Login</a>
+        Don't have an account? <a href="{% url 'register' %}" class="text-indigo-600 hover:text-indigo-800 font-medium">Sign Up</a>
     </div>
 </div>
 {% endblock %}

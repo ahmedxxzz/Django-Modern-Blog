@@ -1,12 +1,16 @@
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import CustomUser
 
 
 class Sign_Up_Form(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = CustomUser
-        fields = ("username", "email", "is_subscribed")
+        fields = ("username", "email", "first_name", "last_name", "is_subscribed")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["email"].required = True
+        self.fields["first_name"].required = True
+        self.fields["last_name"].required = True
+
+   

@@ -33,7 +33,7 @@
                     <div class="text-sm text-gray-500 mt-2 flex items-center space-x-4">
                         <span>{{ post.created_at|date:"F d, Y" }}</span>
                         <span>&bull;</span>
-                        <span>{{ post.author.username }}</span>
+                        <span>{{ post.author.first_name|default:post.author.username }}</span>
                     </div>
                 </header>
                 
