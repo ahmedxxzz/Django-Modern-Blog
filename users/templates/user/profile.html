@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile | Lyra's Blog{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-sm">
+    <div class="flex justify-between items-start mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">
+                {{ user.first_name }} {{ user.last_name }}
+            </h1>
+            <p class="text-gray-500 text-lg">@{{ user.username }}</p>
+        </div>
+        <div class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-semibold">
+            Member
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div class="p-4 bg-gray-50 rounded-md border border-gray-100">
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Email Address</h3>
+            <p class="text-gray-900 font-medium">{{ user.email }}</p>
+        </div>
+        <div class="p-4 bg-gray-50 rounded-md border border-gray-100">
+            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Date Joined</h3>
+            <p class="text-gray-900 font-medium">{{ user.date_joined|date:"F d, Y" }}</p>
+        </div>
+    </div>
+
+    {% if user.bio %}
+    <div class="mb-8 p-4 bg-gray-50 rounded-md border border-gray-100">
+         <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Bio</h3>
+         <p class="text-gray-700 leading-relaxed">{{ user.bio }}</p>
+    </div>
+    {% endif %}
+
+    <div class="border-t pt-8 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-6">Edit Profile</h2>
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            <input type="hidden" name="update_profile" value="true">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- First Name -->
+                <div>
+                    <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                    <input type="text" name="{{ form.first_name.name }}" id="{{ form.first_name.id_for_label }}" value="{{ form.first_name.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <!-- Last Name -->
+                <div>
+                    <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                    <input type="text" name="{{ form.last_name.name }}" id="{{ form.last_name.id_for_label }}" value="{{ form.last_name.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+            </div>
+
+            <!-- Bio -->
+            <div>
+                <label for="{{ form.bio.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                <textarea name="{{ form.bio.name }}" id="{{ form.bio.id_for_label }}" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">{{ form.bio.value|default:'' }}</textarea>
+                <p class="mt-1 text-xs text-gray-500">Share a little bit about yourself.</p>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition font-medium">Save Changes</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="border-t pt-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Preferences</h2>
+        
+        <div class="flex items-center justify-between p-4 bg-indigo-50 rounded-md border border-indigo-100">
+            <div>
+                <h3 class="font-semibold text-indigo-900">Newsletter Subscription</h3>
+                <p class="text-sm text-indigo-700 mt-1">Receive the latest posts and updates via email.</p>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="toggle_subscription" value="true">
+                {% if user.is_subscribed %}
+                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition text-sm font-medium">
+                        Unsubscribe
+                    </button>
+                {% else %}
+                    <button type="submit" class="bg-white text-indigo-600 border border-indigo-600 px-4 py-2 rounded-md hover:bg-indigo-50 transition text-sm font-medium">
+                        Subscribe
+                    </button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

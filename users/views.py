@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .forms import Sign_Up_Form, AuthenticationForm
+from .forms import Sign_Up_Form, AuthenticationForm, ProfileUpdateForm
 from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
 
 
 # Create your views here.
@@ -46,3 +47,25 @@ def LoginView(request):
 def LogoutView(request):
     logout(request)
     return redirect("home")
+
+
+@login_required
+def ProfileView(request):
+    
+    if request.method == "POST":
+        if "toggle_subscription" in request.POST:
+            request.user.is_subscribed = not request.user.is_subscribed
+            request.user.save()
+            status = "Subscribed" if request.user.is_subscribed else "Unsubscribed"
+            messages.success(request, f"You have successfully {status} to the newsletter.")
+            return redirect("profile")
+        
+        elif "update_profile" in request.POST:
+             form = ProfileUpdateForm(request.POST, instance=request.user)
+             if form.is_valid():
+                 form.save()
+                 messages.success(request, "Your profile has been updated!")
+                 return redirect("profile")
+        
+    form = ProfileUpdateForm(instance=request.user)
+    return render(request, "user/profile.html", {"form": form})

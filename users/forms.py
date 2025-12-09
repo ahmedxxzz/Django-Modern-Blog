@@ -13,4 +13,14 @@ class Sign_Up_Form(UserCreationForm):
         self.fields["first_name"].required = True
         self.fields["last_name"].required = True
 
-   
+
+from django import forms
+
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ("first_name", "last_name", "bio")
+        widgets = {
+             "bio": forms.Textarea(attrs={"rows": 4})
+        }
+
