@@ -1,5 +1,6 @@
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import CustomUser
+from django import forms
 
 
 class Sign_Up_Form(UserCreationForm):
@@ -14,7 +15,6 @@ class Sign_Up_Form(UserCreationForm):
         self.fields["last_name"].required = True
 
 
-from django import forms
 
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:

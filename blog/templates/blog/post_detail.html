@@ -23,4 +23,59 @@
             </a>
         </div>
     </article>
+    {% load mptt_tags %}
+    <div class="mt-8 bg-white p-8 rounded-lg shadow-sm">
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">Comments ({{ comments.count }})</h2>
+        
+        <div class="space-y-6">
+            {% recursetree comments %}
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-4 ml-{{ node.level|add:2 }}">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="font-semibold text-gray-900">{{ node.author.first_name|default:node.author.username }}</div>
+                        <div class="text-xs text-gray-500">{{ node.created_at|date:"M d, Y" }}</div>
+                    </div>
+                    <p class="text-gray-700">{{ node.content }}</p>
+                    
+                    {% if user.is_authenticated %}
+                        <button type="button" onclick="document.getElementById('reply-form-{{ node.id }}').classList.toggle('hidden')" class="text-indigo-600 text-sm mt-2 hover:underline">Reply</button>
+                        
+                        <!-- Simple inline reply form -->
+                        <div id="reply-form-{{ node.id }}" class="hidden mt-4">
+                            <form method="post" class="mt-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="parent" value="{{ node.id }}">
+                                <textarea name="content" class="w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500" rows="2" placeholder="Write your reply..."></textarea>
+                                <div class="mt-2 flex justify-end">
+                                    <button type="submit" class="bg-indigo-600 text-white px-4 py-1.5 rounded-md hover:bg-indigo-700 text-sm font-medium">Reply</button>
+                                </div>
+                            </form>
+                        </div>
+                    {% endif %}
+                    
+                    {% if not node.is_leaf_node %}
+                        <div class="ml-8 mt-4 pl-4 border-l-2 border-gray-200">
+                            {{ children }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endrecursetree %}
+        </div>
+
+        {% if user.is_authenticated %}
+            <div class="mt-8 pt-8 border-t border-gray-100">
+                <h3 class="text-lg font-bold mb-4 text-gray-800">Leave a Comment</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ comment_form.content }}
+                    <div class="mt-4 flex justify-end">
+                        <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition font-medium">Post Comment</button>
+                    </div>
+                </form>
+            </div>
+        {% else %}
+            <div class="mt-8 p-6 bg-indigo-50 rounded-lg text-center border border-indigo-100">
+                <p class="text-indigo-800">Please <a href="{% url 'login' %}?next={{ request.path }}" class="font-bold underline hover:text-indigo-900">login</a> to leave a comment.</p>
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}
