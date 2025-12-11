@@ -44,9 +44,7 @@ class Comment(MPTTModel):
 
 
 class NewsletterSubscriber(models.Model):
-    email = models.EmailField(
-        unique=True, error_messages={"unique": "Already subscribed"}
-    )
+    email = models.EmailField(unique=True, error_messages={"unique": "Already subscribed"})
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 

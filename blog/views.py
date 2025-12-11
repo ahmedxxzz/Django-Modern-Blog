@@ -1,7 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
-from .models import Post,Comment
-from .forms import CommentForm
+from django.contrib import messages
+from .models import Post, Comment
+from .forms import CommentForm, NewsSubscriberForm
+from users.models import CustomUser
+
 
 # Create your views here.
 def home(request):
@@ -37,3 +40,24 @@ def post_details(request, slug):
         "comments": comments, 
         "comment_form": comment_form
     })
+
+
+def Subscribe_View(request):
+    if request.user.is_authenticated:
+        return redirect('profile')
+    
+    if request.method == "POST":
+        form = NewsSubscriberForm(data=request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            # Check if email belongs to an existing user
+            if CustomUser.objects.filter(email=email).exists():
+                messages.warning(request, 'This email is already registered. Please login to manage your subscription.')
+                return redirect('login')
+            form.save()
+            messages.success(request, 'You have successfully subscribed to our newsletter!')
+            return redirect('home')
+    else:
+        form = NewsSubscriberForm()
+        
+    return render(request, "blog/subscribe.html", {"form": form})

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Comment
+from .models import Comment, NewsletterSubscriber
 from mptt.forms import TreeNodeChoiceField
 
 class CommentForm(forms.ModelForm):
@@ -17,3 +17,8 @@ class CommentForm(forms.ModelForm):
         self.fields['parent'].required = False
         self.fields['parent'].widget = forms.HiddenInput()
 
+
+class NewsSubscriberForm(forms.ModelForm):
+    class Meta:
+        model = NewsletterSubscriber
+        fields = ('email',)

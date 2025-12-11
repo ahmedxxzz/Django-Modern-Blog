@@ -26,6 +26,7 @@
           <a href="{% url 'profile' %}" class="text-gray-600 mr-4 hover:text-indigo-600 transition font-medium">Hello, {{ user.first_name|default:user.username }}</a>
           <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800 font-medium transition">Logout</a>
           {% else %}
+          <a href="{% url 'subscribe' %}" class="text-gray-600 hover:text-indigo-600 font-medium mr-4 transition">Subscribe</a>
           <a href="{% url 'login' %}" class="text-gray-600 hover:text-indigo-600 font-medium mr-4 transition">Login</a>
           <a href="{% url 'register' %}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition">Sign Up</a>
           {% endif %}
