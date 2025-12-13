@@ -1,9 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.contrib import messages
-from .models import Post, Comment
+from .models import Post, Comment, Like
 from .forms import CommentForm, NewsSubscriberForm
 from users.models import CustomUser
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 
 
 # Create your views here.
@@ -20,6 +22,10 @@ def post_details(request, slug):
     post_detail = get_object_or_404(Post, status=1, slug=slug)
     comments = post_detail.comments.all()
     user_comment = None
+
+    is_liked = False
+    if request.user.is_authenticated:
+        is_liked = post_detail.likes.filter(user=request.user).exists()
 
     if request.method == "POST":
         if request.user.is_authenticated:
@@ -38,7 +44,8 @@ def post_details(request, slug):
     return render(request, "blog/post_detail.html", {
         "post_detail": post_detail, 
         "comments": comments, 
-        "comment_form": comment_form
+        "comment_form": comment_form,
+        "is_liked": is_liked
     })
 
 
@@ -61,3 +68,15 @@ def Subscribe_View(request):
         form = NewsSubscriberForm()
         
     return render(request, "blog/subscribe.html", {"form": form})
+
+@login_required
+def post_like(request, post_id):
+    post = get_object_or_404(Post, id=post_id, status=1)
+    like,created = Like.objects.get_or_create(user=request.user, post=post)
+    if not created:
+        like.delete()
+        liked = False
+    else:
+        liked = True
+    like_count = post.likes.count()
+    return JsonResponse({"liked": liked, "like_count": like_count})
