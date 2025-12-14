@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.contrib import messages
-from .models import Post, Comment, Like
+from .models import Post, Comment, Like, Tag
 from .forms import CommentForm, NewsSubscriberForm
 from users.models import CustomUser
 from django.contrib.auth.decorators import login_required
@@ -80,3 +80,12 @@ def post_like(request, post_id):
         liked = True
     like_count = post.likes.count()
     return JsonResponse({"liked": liked, "like_count": like_count})
+
+
+def post_by_tag(request, tag_slug):
+    tag = get_object_or_404(Tag, slug=tag_slug)
+    post_list = Post.objects.filter(status=1, tags=tag).order_by("author")
+    paginator = Paginator(post_list, 3)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    return render(request, "blog/home.html", {"page_obj": page_obj, "tag": tag})

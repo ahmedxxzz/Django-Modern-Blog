@@ -17,6 +17,7 @@ class Post(models.Model):
     status = models.IntegerField(choices=STATUS_CHOICES, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    tags = models.ManyToManyField("Tag", related_name="posts", blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -62,3 +63,18 @@ class Like(models.Model):
         indexes = [models.Index(fields=["post", "user"])]
         def __str__(self):
             return f"{self.user} liked {self.post}"
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=50, unique=True, db_index=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+    

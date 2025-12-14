@@ -1,125 +1,183 @@
-{% extends 'base.html' %}
-
-{% block title %}{{ post_detail.title }} | Lyra's Blog{% endblock %}
-
-{% block content %}
-    <article class="bg-white p-8 rounded-lg shadow-sm">
-        <header class="mb-8 text-center">
-            <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ post_detail.title }}</h1>
-            <div class="text-gray-500 flex justify-center items-center space-x-4">
-                <span>By {{ post_detail.author.username }}</span>
-                <span>&bull;</span>
-                <span>{{ post_detail.created_at|date:"F d, Y" }}</span>
-            </div>
-        </header>
-        
-        <div class="prose prose-lg prose-indigo mx-auto">
-            {{ post_detail.content|safe }}
-        </div>
-
-        <!-- Like Button Section -->
-        <div class="mt-8 flex items-center justify-center border-t border-b border-gray-100 py-6">
-             <button id="like-btn" data-post-id="{{ post_detail.id }}" class="flex items-center space-x-2 text-gray-500 hover:text-red-500 transition focus:outline-none group">
-                <span id="like-icon" class="text-3xl transform transition-transform group-hover:scale-110">
-                    {% if is_liked %}
-                        ❤️
-                    {% else %}
-                        🤍
-                    {% endif %}
-                </span>
-                <span class="font-bold text-xl text-gray-700 ml-2"><span id="like-count">{{ post_detail.likes.count }}</span> Likes</span>
-            </button>
-        </div>
-
-        <div class="mt-8 pt-4 text-center">
-            <a href="{% url 'home' %}" class="text-indigo-600 hover:text-indigo-800 font-medium transition">
-                &larr; Back to Home
-            </a>
-        </div>
-    </article>
-
-    <script>
-        document.getElementById('like-btn').addEventListener('click', function() {
-            {% if not user.is_authenticated %}
-                window.location.href = "{% url 'login' %}?next={{ request.path }}";
-                return;
-            {% endif %}
-    
-            const postId = this.dataset.postId;
-            const btn = this;
-            const icon = document.getElementById('like-icon');
-            const count = document.getElementById('like-count');
-    
-            fetch(`/post/${postId}/like`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Remove extra spaces/newlines that might come from template rendering
-                icon.textContent = data.liked ? '❤️' : '🤍';
-                count.textContent = data.like_count;
-            })
-            .catch(error => console.error('Error:', error));
-        });
-    </script>
-
-    {% load mptt_tags %}
-    <div class="mt-8 bg-white p-8 rounded-lg shadow-sm">
-        <h2 class="text-2xl font-bold mb-6 text-gray-800">Comments ({{ comments.count }})</h2>
-        
-        <div class="space-y-6">
-            {% recursetree comments %}
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-4 ml-{{ node.level|add:2 }}">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="font-semibold text-gray-900">{{ node.author.first_name|default:node.author.username }}</div>
-                        <div class="text-xs text-gray-500">{{ node.created_at|date:"M d, Y" }}</div>
-                    </div>
-                    <p class="text-gray-700">{{ node.content }}</p>
-                    
-                    {% if user.is_authenticated %}
-                        <button type="button" onclick="document.getElementById('reply-form-{{ node.id }}').classList.toggle('hidden')" class="text-indigo-600 text-sm mt-2 hover:underline">Reply</button>
-                        
-                        <!-- Simple inline reply form -->
-                        <div id="reply-form-{{ node.id }}" class="hidden mt-4">
-                            <form method="post" class="mt-2">
-                                {% csrf_token %}
-                                <input type="hidden" name="parent" value="{{ node.id }}">
-                                <textarea name="content" class="w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500" rows="2" placeholder="Write your reply..."></textarea>
-                                <div class="mt-2 flex justify-end">
-                                    <button type="submit" class="bg-indigo-600 text-white px-4 py-1.5 rounded-md hover:bg-indigo-700 text-sm font-medium">Reply</button>
-                                </div>
-                            </form>
-                        </div>
-                    {% endif %}
-                    
-                    {% if not node.is_leaf_node %}
-                        <div class="ml-8 mt-4 pl-4 border-l-2 border-gray-200">
-                            {{ children }}
-                        </div>
-                    {% endif %}
-                </div>
-            {% endrecursetree %}
-        </div>
-
-        {% if user.is_authenticated %}
-            <div class="mt-8 pt-8 border-t border-gray-100">
-                <h3 class="text-lg font-bold mb-4 text-gray-800">Leave a Comment</h3>
-                <form method="post">
-                    {% csrf_token %}
-                    {{ comment_form.content }}
-                    <div class="mt-4 flex justify-end">
-                        <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition font-medium">Post Comment</button>
-                    </div>
-                </form>
-            </div>
-        {% else %}
-            <div class="mt-8 p-6 bg-indigo-50 rounded-lg text-center border border-indigo-100">
-                <p class="text-indigo-800">Please <a href="{% url 'login' %}?next={{ request.path }}" class="font-bold underline hover:text-indigo-900">login</a> to leave a comment.</p>
-            </div>
-        {% endif %}
+{% extends 'base.html' %} {% block title %}{{ post_detail.title }} | Lyra's
+Blog{% endblock %} {% block content %}
+<article class="bg-white p-8 rounded-lg shadow-sm">
+  <header class="mb-8 text-center">
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">
+      {{ post_detail.title }}
+    </h1>
+    <div class="text-gray-500 flex justify-center items-center space-x-4">
+      <span>By {{ post_detail.author.username }}</span>
+      <span>&bull;</span>
+      <span>{{ post_detail.created_at|date:"F d, Y" }}</span>
     </div>
+  </header>
+
+  {% if post_detail.tags.all %}
+  <div class="flex flex-wrap justify-center gap-2 mb-8">
+    {% for tag in post_detail.tags.all %}
+    <a
+      href="{% url 'post_by_tag' tag.slug %}"
+      class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full hover:bg-indigo-200 transition"
+    >
+      #{{ tag.name }}
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="prose prose-lg prose-indigo mx-auto">
+    {{ post_detail.content|safe }}
+  </div>
+
+  <!-- Like Button Section -->
+  <div
+    class="mt-8 flex items-center justify-center border-t border-b border-gray-100 py-6"
+  >
+    <button
+      id="like-btn"
+      data-post-id="{{ post_detail.id }}"
+      class="flex items-center space-x-2 text-gray-500 hover:text-red-500 transition focus:outline-none group"
+    >
+      <span
+        id="like-icon"
+        class="text-3xl transform transition-transform group-hover:scale-110"
+      >
+        {% if is_liked %} ❤️ {% else %} 🤍 {% endif %}
+      </span>
+      <span class="font-bold text-xl text-gray-700 ml-2"
+        ><span id="like-count">{{ post_detail.likes.count }}</span> Likes</span
+      >
+    </button>
+  </div>
+
+  <div class="mt-8 pt-4 text-center">
+    <a
+      href="{% url 'home' %}"
+      class="text-indigo-600 hover:text-indigo-800 font-medium transition"
+    >
+      &larr; Back to Home
+    </a>
+  </div>
+</article>
+
+<script>
+  document.getElementById('like-btn').addEventListener('click', function() {
+      {% if not user.is_authenticated %}
+          window.location.href = "{% url 'login' %}?next={{ request.path }}";
+          return;
+      {% endif %}
+
+      const postId = this.dataset.postId;
+      const btn = this;
+      const icon = document.getElementById('like-icon');
+      const count = document.getElementById('like-count');
+
+      fetch(`/post/${postId}/like`, {
+          method: 'POST',
+          headers: {
+              'X-CSRFToken': '{{ csrf_token }}',
+              'Content-Type': 'application/json'
+          },
+      })
+      .then(response => response.json())
+      .then(data => {
+          // Remove extra spaces/newlines that might come from template rendering
+          icon.textContent = data.liked ? '❤️' : '🤍';
+          count.textContent = data.like_count;
+      })
+      .catch(error => console.error('Error:', error));
+  });
+</script>
+
+{% load mptt_tags %}
+<div class="mt-8 bg-white p-8 rounded-lg shadow-sm">
+  <h2 class="text-2xl font-bold mb-6 text-gray-800">
+    Comments ({{ comments.count }})
+  </h2>
+
+  <div class="space-y-6">
+    {% recursetree comments %}
+    <div
+      class="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-4 ml-{{ node.level|add:2 }}"
+    >
+      <div class="flex justify-between items-start mb-2">
+        <div class="font-semibold text-gray-900">
+          {{ node.author.first_name|default:node.author.username }}
+        </div>
+        <div class="text-xs text-gray-500">
+          {{ node.created_at|date:"M d, Y" }}
+        </div>
+      </div>
+      <p class="text-gray-700">{{ node.content }}</p>
+
+      {% if user.is_authenticated %}
+      <button
+        type="button"
+        onclick="document.getElementById('reply-form-{{ node.id }}').classList.toggle('hidden')"
+        class="text-indigo-600 text-sm mt-2 hover:underline"
+      >
+        Reply
+      </button>
+
+      <!-- Simple inline reply form -->
+      <div id="reply-form-{{ node.id }}" class="hidden mt-4">
+        <form method="post" class="mt-2">
+          {% csrf_token %}
+          <input type="hidden" name="parent" value="{{ node.id }}" />
+          <textarea
+            name="content"
+            class="w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500"
+            rows="2"
+            placeholder="Write your reply..."
+          ></textarea>
+          <div class="mt-2 flex justify-end">
+            <button
+              type="submit"
+              class="bg-indigo-600 text-white px-4 py-1.5 rounded-md hover:bg-indigo-700 text-sm font-medium"
+            >
+              Reply
+            </button>
+          </div>
+        </form>
+      </div>
+      {% endif %} {% if not node.is_leaf_node %}
+      <div class="ml-8 mt-4 pl-4 border-l-2 border-gray-200">
+        {{ children }}
+      </div>
+      {% endif %}
+    </div>
+    {% endrecursetree %}
+  </div>
+
+  {% if user.is_authenticated %}
+  <div class="mt-8 pt-8 border-t border-gray-100">
+    <h3 class="text-lg font-bold mb-4 text-gray-800">Leave a Comment</h3>
+    <form method="post">
+      {% csrf_token %} {{ comment_form.content }}
+      <div class="mt-4 flex justify-end">
+        <button
+          type="submit"
+          class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition font-medium"
+        >
+          Post Comment
+        </button>
+      </div>
+    </form>
+  </div>
+  {% else %}
+  <div
+    class="mt-8 p-6 bg-indigo-50 rounded-lg text-center border border-indigo-100"
+  >
+    <p class="text-indigo-800">
+      Please
+      <a
+        href="{% url 'login' %}?next={{ request.path }}"
+        class="font-bold underline hover:text-indigo-900"
+        >login</a
+      >
+      to leave a comment.
+    </p>
+  </div>
+  {% endif %}
+</div>
 {% endblock %}
