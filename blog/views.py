@@ -6,7 +6,7 @@ from .forms import CommentForm, NewsSubscriberForm
 from users.models import CustomUser
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-
+from django.db.models import Q
 
 # Create your views here.
 def home(request):
@@ -89,3 +89,15 @@ def post_by_tag(request, tag_slug):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
     return render(request, "blog/home.html", {"page_obj": page_obj, "tag": tag})
+
+
+def Search_View(request):
+    query = request.GET.get('q')
+    results = Post.objects.none()
+    if query:
+        results = Post.objects.filter( Q(title__icontains=query) | Q(content__icontains=query) ).distinct()
+    
+    paginator = Paginator(results, 3)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    
+    return render(request, "blog/home.html", {'query': query, 'page_obj': page_obj})
