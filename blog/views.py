@@ -8,9 +8,14 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db.models import Q
 
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
+
 # Create your views here.
+@cache_page(60 * 15)
+@vary_on_cookie
 def home(request):
-    post_list = Post.objects.filter(status=1).order_by("author")
+    post_list = Post.objects.filter(status=1).select_related("author").order_by("author")
     paginator = Paginator(post_list, 3)  # Show 5 posts per page.
 
     page_number = request.GET.get("page")
@@ -18,9 +23,15 @@ def home(request):
     return render(request, "blog/home.html", {"page_obj": page_obj})
 
 
+@cache_page(60 * 15)
+@vary_on_cookie
 def post_details(request, slug):
-    post_detail = get_object_or_404(Post, status=1, slug=slug)
-    comments = post_detail.comments.all()
+    post_detail = get_object_or_404(
+        Post.objects.select_related("author").prefetch_related("tags"), 
+        status=1, 
+        slug=slug
+    )
+    comments = post_detail.comments.select_related("author").all()
     user_comment = None
 
     is_liked = False
@@ -84,7 +95,7 @@ def post_like(request, post_id):
 
 def post_by_tag(request, tag_slug):
     tag = get_object_or_404(Tag, slug=tag_slug)
-    post_list = Post.objects.filter(status=1, tags=tag).order_by("author")
+    post_list = Post.objects.filter(status=1, tags=tag).select_related("author").order_by("author")
     paginator = Paginator(post_list, 3)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -95,7 +106,7 @@ def Search_View(request):
     query = request.GET.get('q')
     results = Post.objects.none()
     if query:
-        results = Post.objects.filter( Q(title__icontains=query) | Q(content__icontains=query) ).distinct()
+        results = Post.objects.filter( Q(title__icontains=query) | Q(content__icontains=query) ).select_related("author").distinct()
     
     paginator = Paginator(results, 3)
     page_obj = paginator.get_page(request.GET.get("page"))
